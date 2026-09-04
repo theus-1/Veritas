@@ -4,7 +4,7 @@ O **usuário** deve conseguir:
 
 - Inserir uma notícia
 - inserir uma URL;
-- olicitar análise;
+- solicitar análise;
 - visualizar classificação;
 - visualizar nível de confiança;
 - visualizar justificativas;
@@ -27,8 +27,8 @@ De forma inicial:
 Definição de:
 
 - **segurança**: segurança de ponta a ponta em todos os serviços.
-- **performance**: pririzar excelencia antes de velocidade, antes uma informação mais certeira e demorada, do que uma demorada e falsa
-- **disponibilidade**: somente local com código open-source
+- **performance**: priorizar excelencia antes de velocidade, antes uma informação mais certeira e demorada, do que uma demorada e falsa
+- **disponibilidade**: código open-source
 - **tratamento de erros**: completo, todos os erros serão tratados
 - **logs**: logs protegidos e sem vazamento de dados sensíveis.
 - **privacidade**: privacidade dos clientes com seus dados e consultas.
@@ -36,7 +36,7 @@ Definição de:
 
 # Objetivo do produto
 
-Incentivo a pessoas realizarem pesquisas em fontes nesse momento tão importante que está acontecendo em nosso país. Em uma eleição, a chcecagem dos fatos é de suma importancia.
+Incentivo a pessoas realizarem pesquisas em fontes nesse momento tão importante que está acontecendo em nosso país. Em uma eleição, a chececagem dos fatos é de suma importancia.
 
 # Escopo inicial
 
