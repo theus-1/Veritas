@@ -1,155 +1,24 @@
-# STACK do projeto
+# Arquitetura atual do Veritas
 
-## Backend
+## Fluxo implementado
 
-- Python
-- FastAPI
-- Pydantic
-- SQLAlchemy
-- SQLite inicialmente
-- PostgreSQL posteriormente
-- Pytest
+1. React envia título, texto e URL opcional ao endpoint POST /analysis/.
+2. FastAPI valida entrada e limites de requisição.
+3. ClaimService extrai afirmações e enriquece o contexto de busca.
+4. SearchService consulta GNews; EvidenceService ordena e limita resultados.
+5. AnalysisService interpreta microbatches: Gemini primário → Groq fallback → heurística local nos erros recuperáveis previstos.
+6. EvidenceService persiste relações específicas entre fontes e afirmações. AnalysisService calcula vereditos e força das evidências.
+7. SQLAlchemy persiste análises, claims e evidências em SQLite.
+8. O frontend agrupa artigos na lista geral e mantém as avaliações individuais acessíveis.
 
-Responsável por receber requisições, validar dados, auth, chamar serviços, retornar respostas, guardar dados e testes automatizados
+## Limites de responsabilidade
 
-## Frontend
+O backend controla a classificação. O agrupamento visual não altera dados persistidos, votos ou resposta da API. Uma URL pode apoiar uma afirmação e contradizer outra.
 
-- React
-- Vite
-- TypeScript
-- CSS/Tailwind
+A calibração é aplicada às novas relevâncias persistidas, inclusive vindas de IA. O consenso e a diversidade continuam calculados localmente. Sem evidências direcionais, o resultado permanece inconclusivo.
 
-Responsável pela interface, entrada de notícia, exbição do resultado e histórico
+O cliente OpenAI legado permanece no repositório, mas não participa da cadeia ativa Gemini → Groq → local. Docker, autenticação, histórico navegável e deploy público não são capacidades declaradas deste MVP.
 
-## Inteligência
+## Validação e privacidade
 
-- API de LLM para análise semântica
-- APIs/busca de notícias para encontrar evidências
-
-Responsável pela orquestração da análise, encontrar e organizar evidências e interpretação de informações
-
-## Infra
-
-- Git + GitHub
-- Docker
-- Render/Vercel no deploy
-
-Responsável por toda parte de infraestrutura base da aplicação.
-
-
-# Arquitetura Geral
-```
-                    ┌─────────────────┐
-                    │    FRONTEND     │
-                    │ React/TypeScript│
-                    └────────┬────────┘
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │       API       │
-                    │     FastAPI     │
-                    └────────┬────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-        ┌──────────┐   ┌──────────┐   ┌──────────┐
-        │ Analysis │   │ Evidence │   │ History  │
-        │ Service  │   │ Service  │   │ Service  │
-        └──────────┘   └─────┬────┘   └──────────┘
-                             │
-                     ┌───────┴────────┐
-                     ▼                ▼
-                ┌─────────┐      ┌─────────┐
-                │ Search  │      │   AI    │
-                │  APIs   │      │ Provider│
-                └─────────┘      └─────────┘
-```
-
-# Fluxo de análise
-
-Abaixo um fluxo de como seria a análise inteligente de conferência de uma notícia.
-
-```
-Usuário
-   ↓
-Envia notícia
-   ↓
-API recebe
-   ↓
-Extrai claims
-   ↓
-Busca evidências
-   ↓
-Analisa fontes
-   ↓
-IA interpreta evidências
-   ↓
-Calcula classificação
-   ↓
-Salva resultado
-   ↓
-Retorna para usuário
-```
-
-# IA
-
-A IA não será a fonte da verdade e sim um facilitador para entendimento da notícia.
-
-Não é:
-```
-Notícia
-   ↓
-ChatGPT
-   ↓
-"É fake"
-```
-
-E sim:
-```
-Notícia
-   ↓
-Claims
-   ↓
-Fontes
-   ↓
-Evidências
-   ↓
-IA interpreta
-   ↓
-Classificação
-```
-
-# Dependências Externas
-
-Abaixo algumas API's não listadas, mas que são utilizadas no projeto.
-
-- API de busca de notícias
-- API de LLM
-- Serviço de busca/web
-
-1. E o que acontece caso a API caia?
-
-Avisa o usuário que o serviço está temporariamente indisponível.
-
-# Processamento
-
-Análise síncrona:
-
-```
-POST /analysis
-       ↓
-espera
-       ↓
-resultado
-```
-
-# Diagrama de estrutura do projeto
-
-```mermaid
-flowchart TD
-    A[Usuário]-->B[FrontEnd]-->C[FastAPI]-->D[Analysis Service]
-    D -- | --> E[Claim Extraction]
-    D -- | --> F[Evidence Service]
-    D -- | --> G[AI Provider]
-    D -- | --> H[(DataBase)]
-    F -- | --> I[Search API]
+Os testes isolam configuração e banco antes da importação da aplicação. Chamadas externas são simuladas. O modo validation do Vite desabilita arquivos de ambiente. Logs da Groq contêm status e códigos controlados, sem corpo de erro do provedor.

@@ -1,15 +1,14 @@
-import os
-
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv()
+from app.core.config import Config
 
-db_url = os.getenv("DATABASE_URL")
+db_url = Config().database_url
+if db_url.startswith(("postgres://", "postgresql://")):
+    db_url = "postgresql+psycopg://" + db_url.split("://", 1)[1]
 
-engine = create_engine(db_url)
+engine = create_engine(db_url, pool_pre_ping=True)
 
 class Base(DeclarativeBase):
     pass

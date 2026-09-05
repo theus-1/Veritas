@@ -1,6 +1,7 @@
 from app.core.database import SessionLocal
 from app.models.analysis import Analysis, StatusEnum
 from app.models.claim import Claim
+from app.models.evidence import EvidenceVerdictEnum
 from app.schemas.search import SearchResult
 from app.services.evidence_service import EvidenceService
 
@@ -151,3 +152,79 @@ def test_calculate_relevance_without_matching_words():
     )
 
     assert relevance == 0.0
+
+
+def test_determine_verdict_supports():
+
+    service = EvidenceService()
+
+    result = SearchResult(
+        title="Brasil derrota Argentina",
+        url="https://exemplo.com/brasil-argentina",
+        source_name="Fonte de teste",
+        snippet="O Brasil venceu a Argentina por 2 a 0."
+    )
+
+    verdict = service.determine_verdict(
+        "Brasil venceu a Argentina.",
+        result
+    )
+
+    assert verdict == EvidenceVerdictEnum.SUPPORTS
+
+
+def test_determine_verdict_contradicts():
+
+    service = EvidenceService()
+
+    result = SearchResult(
+        title="Argentina derrota Brasil",
+        url="https://exemplo.com/argentina-brasil",
+        source_name="Fonte de teste",
+        snippet="A Argentina venceu o Brasil por 2 a 0."
+    )
+
+    verdict = service.determine_verdict(
+        "Brasil venceu a Argentina.",
+        result
+    )
+
+    assert verdict == EvidenceVerdictEnum.CONTRADICTS
+
+
+def test_determine_verdict_neutral():
+
+    service = EvidenceService()
+
+    result = SearchResult(
+        title="Vasco derrota Vitória",
+        url="https://exemplo.com/vasco-vitoria",
+        source_name="Fonte de teste",
+        snippet="O Vasco venceu o Vitória pela Copa do Brasil."
+    )
+
+    verdict = service.determine_verdict(
+        "Brasil venceu a Argentina.",
+        result
+    )
+
+    assert verdict == EvidenceVerdictEnum.NEUTRAL
+
+
+def test_determine_verdict_contradicts_with_negation():
+
+    service = EvidenceService()
+
+    result = SearchResult(
+        title="Brasil não venceu a Argentina",
+        url="https://exemplo.com/brasil-argentina",
+        source_name="Fonte de teste",
+        snippet="O Brasil não venceu a Argentina na partida."
+    )
+
+    verdict = service.determine_verdict(
+        "Brasil venceu a Argentina.",
+        result
+    )
+
+    assert verdict == EvidenceVerdictEnum.CONTRADICTS

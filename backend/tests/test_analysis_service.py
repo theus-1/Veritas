@@ -39,8 +39,10 @@ def test_create_analysis_complete_flow(monkeypatch):
     assert len(analysis.claims) == 2
     assert len(analysis.evidences) == 2
 
-    assert analysis.confidence == 0.5
-    assert analysis.verdict == VerdictEnum.INCONCLUSIVA
+    # Uma única fonte não permite certeza definitiva.
+    assert 0 < analysis.confidence < 0.8
+
+    assert analysis.verdict == VerdictEnum.PROVAVELMENTE_VERDADEIRA
     assert analysis.status == StatusEnum.COMPLETED
 
     db.close()

@@ -112,7 +112,7 @@ def test_calculate_confidence_without_evidence():
 
     confidence = service.calculate_confidence([])
 
-    assert confidence == 0.0
+    assert confidence is None
 
 
 def test_calculate_confidence_with_one_evidence():
@@ -149,22 +149,22 @@ def test_calculate_confidence_with_multiple_evidences():
     assert confidence == 0.7
 
 
-def test_generate_verdict_false():
+def test_low_relevance_is_not_false():
 
     service = ClaimService()
 
     verdict = service.generate_verdict(0.10)
 
-    assert verdict == VerdictEnum.FALSA
+    assert verdict == VerdictEnum.INCONCLUSIVA
 
 
-def test_generate_verdict_probably_false():
+def test_weak_relevance_is_not_probably_false():
 
     service = ClaimService()
 
     verdict = service.generate_verdict(0.30)
 
-    assert verdict == VerdictEnum.PROVAVELMENTE_FALSA
+    assert verdict == VerdictEnum.INCONCLUSIVA
 
 
 def test_generate_verdict_inconclusive():
@@ -176,19 +176,75 @@ def test_generate_verdict_inconclusive():
     assert verdict == VerdictEnum.INCONCLUSIVA
 
 
-def test_generate_verdict_probably_true():
+def test_relevance_alone_is_not_probably_true():
 
     service = ClaimService()
 
     verdict = service.generate_verdict(0.80)
 
-    assert verdict == VerdictEnum.PROVAVELMENTE_VERDADEIRA
+    assert verdict == VerdictEnum.INCONCLUSIVA
 
 
-def test_generate_verdict_true():
+def test_relevance_alone_is_not_true():
 
     service = ClaimService()
 
     verdict = service.generate_verdict(0.95)
 
-    assert verdict == VerdictEnum.VERDADEIRA
+    assert verdict == VerdictEnum.INCONCLUSIVA
+
+def test_build_search_texts_inherits_repeated_role_entity():
+    service = ClaimService()
+
+    claims = [
+        "Presidente Lula morreu",
+        "Presidente lula morreu de overdose",
+        "Presidente morreu peladão",
+        "Presidente lula está no momento em um caixão",
+    ]
+
+    values = (
+        service.build_search_texts(
+            claims
+        )
+    )
+
+    assert (
+        values[0]
+        == "Presidente Lula morreu"
+    )
+
+    assert (
+        values[1]
+        == "Presidente lula morreu de overdose"
+    )
+
+    assert (
+        values[2].lower()
+        == "presidente lula morreu peladão"
+    )
+
+    assert (
+        values[3]
+        == "Presidente lula está no momento em um caixão"
+    )
+
+def test_build_search_texts_does_not_replace_existing_entity():
+    service = ClaimService()
+
+    claims = [
+        "Presidente Lula discursou",
+        "Presidente Lula viajou",
+        "Presidente Bolsonaro morreu",
+    ]
+
+    values = (
+        service.build_search_texts(
+            claims
+        )
+    )
+
+    assert (
+        values[2]
+        == "Presidente Bolsonaro morreu"
+    )
