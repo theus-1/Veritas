@@ -6,7 +6,16 @@ from app.main import app
 client = TestClient(app)
 
 
-def test_create_analysis_success():
+def test_create_analysis_success(monkeypatch):
+
+    def fake_search(self, query):
+        return []
+
+    monkeypatch.setattr(
+        "app.clients.gnews_client.GNewsClient.search",
+        fake_search
+    )
+
     response = client.post(
         "/analysis/",
         json={
@@ -22,12 +31,23 @@ def test_create_analysis_success():
 
     assert "id" in data
     assert data["title"] == "Notícia de teste"
-    assert data["input_text"] == "A água ferve a 100 graus Celsius ao nível do mar."
+    assert data["input_text"] == (
+        "A água ferve a 100 graus Celsius ao nível do mar."
+    )
     assert data["input_url"] == "https://exemplo.com/teste"
     assert data["status"] == "Completa"
 
 
-def test_create_analysis_without_url():
+def test_create_analysis_without_url(monkeypatch):
+
+    def fake_search(self, query):
+        return []
+
+    monkeypatch.setattr(
+        "app.clients.gnews_client.GNewsClient.search",
+        fake_search
+    )
+
     response = client.post(
         "/analysis/",
         json={
@@ -40,10 +60,13 @@ def test_create_analysis_without_url():
 
     data = response.json()
 
+    assert "id" in data
     assert data["input_url"] is None
+    assert data["status"] == "Completa"
 
 
 def test_create_analysis_invalid_data():
+
     response = client.post(
         "/analysis/",
         json={

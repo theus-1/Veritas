@@ -1,10 +1,27 @@
 from app.core.database import SessionLocal
+from app.models.analysis import StatusEnum, VerdictEnum
 from app.schemas.analysis import AnalysisCreate
+from app.schemas.search import SearchResult
 from app.services.analysis_service import AnalysisService
-from app.models.analysis import VerdictEnum, StatusEnum
 
 
-def test_create_analysis_complete_flow():
+def test_create_analysis_complete_flow(monkeypatch):
+
+    def fake_search(self, query):
+        return [
+            SearchResult(
+                title="Brasil ganhou o jogo",
+                url="https://exemplo.com/brasil",
+                source_name="Fonte de teste",
+                snippet="O Brasil ganhou o jogo."
+            )
+        ]
+
+    monkeypatch.setattr(
+        "app.clients.gnews_client.GNewsClient.search",
+        fake_search
+    )
+
     db = SessionLocal()
     service = AnalysisService()
 
@@ -15,9 +32,15 @@ def test_create_analysis_complete_flow():
 
     analysis = service.create_analysis(db, data)
 
-    assert analysis.confidence == 0.0
-    assert analysis.verdict == VerdictEnum.FALSA
-    assert analysis.status == StatusEnum.COMPLETED
+    assert analysis is not None
+    assert analysis.id is not None
+    assert analysis.title == "Notícia de teste"
+
     assert len(analysis.claims) == 2
+    assert len(analysis.evidences) == 2
+
+    assert analysis.confidence == 0.5
+    assert analysis.verdict == VerdictEnum.INCONCLUSIVA
+    assert analysis.status == StatusEnum.COMPLETED
 
     db.close()
