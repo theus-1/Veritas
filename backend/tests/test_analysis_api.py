@@ -24,7 +24,7 @@ def test_create_analysis_success():
     assert data["title"] == "Notícia de teste"
     assert data["input_text"] == "A água ferve a 100 graus Celsius ao nível do mar."
     assert data["input_url"] == "https://exemplo.com/teste"
-    assert data["status"] == "Pendente"
+    assert data["status"] == "Completa"
 
 
 def test_create_analysis_without_url():

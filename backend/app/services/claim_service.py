@@ -1,6 +1,7 @@
 from app.models.claim import Claim
 from app.models.analysis import Analysis
 from sqlalchemy.orm import Session
+from app.models.analysis import VerdictEnum
 
 class ClaimService:
     def extract_claims(self, text: str):
@@ -34,5 +35,19 @@ class ClaimService:
         total = sum(relevances)
         media = total / len(relevances)
         return media
+
+    def generate_verdict(self, confidence: float):
+        if confidence < 0.20:
+            return VerdictEnum.FALSA
+        elif confidence < 0.40:
+            return VerdictEnum.PROVAVELMENTE_FALSA
+        elif confidence < 0.70:
+            return VerdictEnum.INCONCLUSIVA
+        elif confidence < 0.90:
+            return VerdictEnum.PROVAVELMENTE_VERDADEIRA
+        else:
+            return VerdictEnum.VERDADEIRA
+
+
 
 

@@ -3,6 +3,9 @@ from app.models.analysis import Analysis, StatusEnum
 from app.services.claim_service import ClaimService
 from app.models.evidence import Evidence
 import pytest
+from app.models.analysis import VerdictEnum
+from app.schemas.analysis import AnalysisCreate
+from app.services.analysis_service import AnalysisService
 
 def test_create_claims():
     db = SessionLocal()
@@ -69,3 +72,35 @@ def test_calculate_confidence_without_evidences():
     confidence = service.calculate_confidence([])
 
     assert confidence == 0.0
+
+def test_generate_verdict():
+    service = ClaimService()
+
+    assert service.generate_verdict(0.19) == VerdictEnum.FALSA
+    assert service.generate_verdict(0.20) == VerdictEnum.PROVAVELMENTE_FALSA
+    assert service.generate_verdict(0.39) == VerdictEnum.PROVAVELMENTE_FALSA
+    assert service.generate_verdict(0.40) == VerdictEnum.INCONCLUSIVA
+    assert service.generate_verdict(0.69) == VerdictEnum.INCONCLUSIVA
+    assert service.generate_verdict(0.70) == VerdictEnum.PROVAVELMENTE_VERDADEIRA
+    assert service.generate_verdict(0.89) == VerdictEnum.PROVAVELMENTE_VERDADEIRA
+    assert service.generate_verdict(0.90) == VerdictEnum.VERDADEIRA
+    assert service.generate_verdict(1.0) == VerdictEnum.VERDADEIRA
+
+
+def test_create_analysis_persists_claims():
+    db = SessionLocal()
+    service = AnalysisService()
+
+    data = AnalysisCreate(
+        title="Notícia de teste",
+        input_text="O Brasil ganhou o jogo. A partida terminou ontem."
+    )
+
+    analysis = service.create_analysis(db, data)
+
+    assert analysis is not None
+    assert len(analysis.claims) == 2
+    assert analysis.claims[0].text == "O Brasil ganhou o jogo"
+    assert analysis.claims[1].text == "A partida terminou ontem"
+
+    db.close()
